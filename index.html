@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mapa Retail Jalisco</title>
+  <meta name="description" content="Mapa de tiendas de ropa en Jalisco con datos de contacto y editor de mensajes de WhatsApp.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛍️</text></svg>">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.Default.min.css">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="logo">🛍️</span>
+      <div>
+        <h1>Mapa Retail · Tiendas de Ropa</h1>
+        <p class="sub">Jalisco, México</p>
+      </div>
+    </div>
+
+    <form class="finder" id="finder" role="search" onsubmit="return false">
+      <label class="finder-field">
+        <span>¿Qué buscas?</span>
+        <input id="q" type="search" placeholder="Tienda, marca o teléfono…" autocomplete="off">
+      </label>
+      <label class="finder-field">
+        <span>¿Dónde?</span>
+        <select id="fMun" aria-label="Municipio"><option value="">Todo Jalisco</option></select>
+      </label>
+      <label class="finder-field narrow" id="radiusWrap">
+        <span>Radio</span>
+        <select id="fRadius" aria-label="Radio de búsqueda">
+          <option value="15">15 km</option>
+          <option value="30" selected>30 km</option>
+          <option value="70">70 km</option>
+          <option value="200">200 km</option>
+        </select>
+      </label>
+      <button type="button" class="btn near" id="btnNear" title="Buscar tiendas cerca de mi ubicación">📍 Cerca de mí</button>
+    </form>
+
+    <div class="top-actions">
+      <button id="btnBulk" class="btn btn-wa" title="Crear mensaje para todas las tiendas filtradas">💬 Masivo</button>
+      <button id="btnNew" class="btn" title="Editor con número manual">✍️ Editor WA</button>
+      <button id="btnExport" class="btn" title="Exportar lista filtrada">⬇️ CSV</button>
+      <button id="btnTheme" class="btn icon" title="Cambiar tema" aria-label="Cambiar tema">🌓</button>
+    </div>
+  </header>
+
+  <main class="layout">
+    <aside class="sidebar" id="sidebar">
+      <button class="sheet-handle" id="sheetHandle" aria-label="Expandir lista"><span></span></button>
+
+      <nav class="tabs" role="tablist">
+        <button class="tab active" data-tab="stores" role="tab">🏬 Tiendas</button>
+        <button class="tab" data-tab="muns" role="tab">🗺️ Municipios</button>
+        <button class="tab" data-tab="ai" role="tab">✨ Asistente IA</button>
+      </nav>
+
+      <section class="pane" id="pane-stores">
+        <div class="filters">
+          <div class="az" id="az" aria-label="Filtrar por letra"></div>
+          <div class="row">
+            <label class="check"><input type="checkbox" id="fPhone"> Solo con teléfono</label>
+            <select id="fSort" aria-label="Ordenar">
+              <option value="az">Orden A–Z</option>
+              <option value="mun">Por municipio</option>
+              <option value="dist">Por distancia</option>
+            </select>
+          </div>
+          <div class="active-filters" id="activeFilters"></div>
+        </div>
+        <div class="stats" id="stats"></div>
+        <ul class="list" id="list"></ul>
+        <div class="loader" id="loader">Cargando datos…</div>
+        <div class="fallback hidden" id="fallback">
+          <p>No se pudo cargar <code>data/tiendas_ropa_jalisco_final.csv</code>. Si abriste el archivo directamente, usa un servidor local o carga el CSV aquí:</p>
+          <input type="file" id="csvFile" accept=".csv,text/csv">
+        </div>
+      </section>
+
+      <section class="pane hidden" id="pane-muns">
+        <p class="pane-intro">Directorio por municipio. Toca uno para verlo en el mapa.</p>
+        <ul class="mun-list" id="munList"></ul>
+      </section>
+
+      <section class="pane hidden" id="pane-ai">
+        <div class="chat" id="chat">
+          <div class="msg bot">¡Hola! 👋 Pregúntame por las tiendas y filtro el mapa por ti. Por ejemplo:</div>
+          <div class="suggest" id="suggest">
+            <button class="chip">Boutiques en Zapopan con teléfono</button>
+            <button class="chip">¿Dónde hay mayoreo?</button>
+            <button class="chip">Uniformes escolares</button>
+            <button class="chip">Tiendas para caballero</button>
+          </div>
+        </div>
+        <form class="chat-form" id="chatForm">
+          <input id="chatInput" type="text" placeholder="Escribe tu pregunta…" autocomplete="off" maxlength="500">
+          <button class="btn btn-ai" type="submit">Enviar</button>
+        </form>
+      </section>
+    </aside>
+    <section class="map-wrap"><div id="map"></div></section>
+  </main>
+
+  <!-- WhatsApp editor -->
+  <div class="modal hidden" id="waModal" role="dialog" aria-modal="true" aria-labelledby="waTitle">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h2 id="waTitle">💬 Editor de mensaje WhatsApp</h2>
+        <button class="btn icon" id="waClose" aria-label="Cerrar">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="editor-col">
+          <div class="target" id="waTarget"></div>
+
+          <div class="field">
+            <label for="tplSelect">Plantilla</label>
+            <div class="row">
+              <select id="tplSelect"></select>
+              <button class="btn sm" id="tplSave" title="Guardar como plantilla">💾 Guardar</button>
+              <button class="btn sm" id="tplDelete" title="Eliminar plantilla personalizada">🗑️</button>
+            </div>
+          </div>
+
+          <div class="ai-box">
+            <label for="aiInstr">✨ Redactar con IA</label>
+            <div class="row wrap">
+              <input id="aiInstr" type="text" maxlength="600" placeholder="Ej. ofrece pantalones de mezclilla a precio de mayoreo">
+              <select id="aiTone" aria-label="Tono">
+                <option value="cordial y profesional">Cordial</option>
+                <option value="cercano y amigable">Amigable</option>
+                <option value="formal">Formal</option>
+                <option value="entusiasta y promocional">Promocional</option>
+                <option value="breve y directo">Breve</option>
+              </select>
+              <button class="btn btn-ai sm" id="aiGen" type="button">Generar</button>
+              <button class="btn sm" id="aiImprove" type="button" title="Mejorar el texto actual">Mejorar texto</button>
+            </div>
+          </div>
+
+          <div class="toolbar" id="toolbar">
+            <button data-wrap="*" title="Negrita"><b>B</b></button>
+            <button data-wrap="_" title="Cursiva"><i>I</i></button>
+            <button data-wrap="~" title="Tachado"><s>S</s></button>
+            <button data-wrap="```" title="Monoespaciado"><code>{ }</code></button>
+            <button data-prefix="• " title="Viñeta">•</button>
+            <button data-prefix="1. " title="Lista numerada">1.</button>
+            <button data-prefix="> " title="Cita">❝</button>
+            <span class="sep"></span>
+            <button id="emojiToggle" title="Más emojis">😀 ▾</button>
+          </div>
+
+          <div class="quick-emojis" id="quickEmojis"></div>
+          <div class="emoji-pop hidden" id="emojiPop"><emoji-picker locale="es" class="light"></emoji-picker></div>
+
+          <textarea id="waText" rows="9" placeholder="Escribe tu mensaje… usa {nombre}, {municipio}, {telefono}"></textarea>
+
+          <div class="vars">
+            <span>Variables:</span>
+            <button class="chip" data-var="{nombre}">{nombre}</button>
+            <button class="chip" data-var="{municipio}">{municipio}</button>
+            <button class="chip" data-var="{telefono}">{telefono}</button>
+            <button class="chip" data-var="{mi_nombre}">{mi_nombre}</button>
+            <span class="count" id="charCount">0 caracteres</span>
+          </div>
+
+          <div class="field">
+            <label for="myName">Tu nombre / empresa (para {mi_nombre})</label>
+            <input id="myName" type="text" placeholder="Ej. Textiles del Bajío">
+          </div>
+        </div>
+
+        <div class="preview-col">
+          <div class="phone">
+            <div class="phone-head"><span class="avatar">🏬</span><span id="pvName">Tienda</span></div>
+            <div class="phone-body"><div class="bubble" id="pvBubble"></div></div>
+          </div>
+
+          <div class="output" id="singleOut">
+            <label for="waLink">Enlace wa.me</label>
+            <input id="waLink" type="text" readonly>
+            <div class="row wrap">
+              <a class="btn btn-wa" id="waOpen" target="_blank" rel="noopener">📲 Abrir WhatsApp</a>
+              <button class="btn" id="copyLink">🔗 Copiar enlace</button>
+              <button class="btn" id="copyMsg">📋 Copiar mensaje</button>
+              <button class="btn" id="showQr">▦ QR</button>
+            </div>
+            <div class="qr hidden" id="qr"></div>
+          </div>
+
+          <div class="output hidden" id="bulkOut">
+            <div class="row between">
+              <strong id="bulkCount"></strong>
+              <button class="btn sm" id="copyAllLinks">📋 Copiar todos</button>
+            </div>
+            <ul class="bulk-list" id="bulkList"></ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/leaflet.markercluster.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script type="module" src="https://cdn.jsdelivr.net/npm/emoji-picker-element@1/index.js"></script>
+  <script src="js/geo.js"></script>
+  <script src="js/ai.js"></script>
+  <script src="js/whatsapp.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
