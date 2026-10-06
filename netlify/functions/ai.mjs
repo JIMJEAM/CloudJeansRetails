@@ -15,13 +15,13 @@ const clip = (s, n) => String(s ?? '').slice(0, n);
 
 function buildSearch(input) {
   const stores = (Array.isArray(input.stores) ? input.stores : []).slice(0, 500)
-    .map((s) => `${+s.id}|${clip(s.nombre, 80)}|${clip(s.municipio, 40)}|${s.tel ? 'tel' : 'sin tel'}`)
+    .map((s) => `${+s.id}|${clip(s.nombre, 80)}|${clip(s.municipio, 40)}|${clip(s.estado, 20)}|${s.tel ? 'tel' : 'sin tel'}`)
     .join('\n');
   const municipios = (Array.isArray(input.municipios) ? input.municipios : []).map((m) => clip(m, 40));
   return {
     prompt:
-`Eres el asistente de un mapa de tiendas de ropa en Jalisco, México. Responde en español, breve y útil.
-Lista de tiendas (id|nombre|municipio|teléfono):
+`Eres el asistente de un mapa de tiendas de ropa en Jalisco y Guanajuato, México. Responde en español, breve y útil.
+Lista de tiendas (id|nombre|municipio|estado|teléfono):
 ${stores}
 
 Pregunta del usuario: "${clip(input.question, 500)}"

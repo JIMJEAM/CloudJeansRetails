@@ -1,7 +1,7 @@
-# 🛍️ Mapa Retail · Tiendas de Ropa Jalisco
+# 🛍️ Mapa Retail · Tiendas de Ropa (Jalisco y Guanajuato)
 
 Web app estática (HTML + CSS + JS, sin build) que muestra en un mapa las tiendas de ropa de
-`data/tiendas_ropa_jalisco_final.csv`, permite consultar teléfono / email / WhatsApp y trae un
+`data/tiendas_ropa_jalisco_final.csv` y `data/tiendas_ropa_guanajuato_final.csv`, permite consultar teléfono / email / WhatsApp y trae un
 editor de mensajes de WhatsApp que genera enlaces `wa.me`.
 
 ## Funciones
@@ -24,7 +24,7 @@ editor de mensajes de WhatsApp que genera enlaces `wa.me`.
 - Tema claro/oscuro y diseño móvil (la lista se vuelve un panel deslizable).
 
 ## Datos
-- El archivo que lee la app es **`data/tiendas_ropa_jalisco_final.csv`**. Para actualizar datos, reemplázalo con las mismas columnas:
+- La app lee un CSV por estado, listados en `SOURCES` de `js/app.js` (Jalisco: `data/tiendas_ropa_jalisco_final.csv`, Guanajuato: `data/tiendas_ropa_guanajuato_final.csv`); el estado se toma del archivo. Para actualizar datos, reemplaza el archivo con las mismas columnas:
   `nombre,municipio,teléfono,correo,WhatsApp,sitio_red,url_fuente`. `ND` = no disponible.
 - El CSV no trae coordenadas: cada tienda se ubica en el **centro aproximado de su municipio** (`js/geo.js`).
   Si agregas un municipio nuevo, añade su latitud/longitud ahí.
@@ -85,6 +85,6 @@ js/app.js        # carga CSV, mapa, filtros, lista
 js/whatsapp.js   # editor de mensajes y enlaces wa.me
 js/ai.js         # cliente del endpoint /api/ai
 netlify/functions/ai.mjs   # función que llama a Gemini con la clave del servidor
-data/tiendas_ropa_jalisco_final.csv
+data/tiendas_ropa_*_final.csv   # un CSV por estado
 netlify.toml
 ```

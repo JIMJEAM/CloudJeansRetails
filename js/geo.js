@@ -1,8 +1,8 @@
 // Centroides aproximados por municipio (el CSV no trae coordenadas).
 // Para agregar un municipio nuevo, añade su nombre sin acentos en minúsculas.
 window.GEO = {
-  center: [20.55, -103.6],
-  zoom: 8,
+  center: [20.7, -102.4],
+  zoom: 7,
   municipios: {
     'autlan': [19.7708, -104.3647],
     'ameca': [20.5467, -104.0467],
@@ -26,6 +26,12 @@ window.GEO = {
     'arandas': [20.7058, -102.3464],
     'chapala': [20.2958, -103.1911],
     'tequila': [20.8822, -103.8364],
+    // Guanajuato
+    'leon': [21.1250, -101.6860],
+    'irapuato': [20.6767, -101.3542],
+    'salamanca': [20.5719, -101.1956],
+    'celaya': [20.5235, -100.8157],
+    'guanajuato': [21.0190, -101.2574],
   },
 };
 

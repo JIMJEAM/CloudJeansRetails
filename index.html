@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Mapa Retail Jalisco</title>
-  <meta name="description" content="Mapa de tiendas de ropa en Jalisco con datos de contacto y editor de mensajes de WhatsApp.">
+  <title>Mapa Retail Jalisco y Guanajuato</title>
+  <meta name="description" content="Mapa de tiendas de ropa en Jalisco y Guanajuato con datos de contacto y editor de mensajes de WhatsApp.">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛍️</text></svg>">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.min.css">
@@ -17,7 +17,7 @@
       <span class="logo">🛍️</span>
       <div>
         <h1>Mapa Retail · Tiendas de Ropa</h1>
-        <p class="sub">Jalisco, México</p>
+        <p class="sub">Jalisco y Guanajuato, México</p>
       </div>
     </div>
 
@@ -28,7 +28,11 @@
       </label>
       <label class="finder-field">
         <span>¿Dónde?</span>
-        <select id="fMun" aria-label="Municipio"><option value="">Todo Jalisco</option></select>
+        <select id="fEstado" aria-label="Estado"><option value="">Todos los estados</option></select>
+      </label>
+      <label class="finder-field">
+        <span>Municipio</span>
+        <select id="fMun" aria-label="Municipio"><option value="">Todos los municipios</option></select>
       </label>
       <label class="finder-field narrow" id="radiusWrap">
         <span>Radio</span>
@@ -77,7 +81,7 @@
         <ul class="list" id="list"></ul>
         <div class="loader" id="loader">Cargando datos…</div>
         <div class="fallback hidden" id="fallback">
-          <p>No se pudo cargar <code>data/tiendas_ropa_jalisco_final.csv</code>. Si abriste el archivo directamente, usa un servidor local o carga el CSV aquí:</p>
+          <p>No se pudo cargar <code>data/tiendas_ropa_*_final.csv</code>. Si abriste el archivo directamente, usa un servidor local o carga el CSV aquí:</p>
           <input type="file" id="csvFile" accept=".csv,text/csv">
         </div>
       </section>

@@ -1,5 +1,8 @@
 (function () {
-  const CSV_URL = 'data/tiendas_ropa_jalisco_final.csv';
+  const SOURCES = [
+    { estado: 'Jalisco', url: 'data/tiendas_ropa_jalisco_final.csv' },
+    { estado: 'Guanajuato', url: 'data/tiendas_ropa_guanajuato_final.csv' },
+  ];
   const $ = (id) => document.getElementById(id);
   const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
@@ -125,6 +128,7 @@
         id: i,
         nombre: clean(r['nombre']) || 'Sin nombre',
         municipio: clean(r['municipio']) || 'Sin municipio',
+        estado: raw.__estado || 'Jalisco',
         telefono,
         correo: clean(r['correo']),
         whatsapp,
@@ -156,9 +160,10 @@
     $('loader').classList.add('hidden');
     $('fallback').classList.add('hidden');
 
-    const muns = municipios();
-    $('fMun').innerHTML = '<option value="">Todo Jalisco</option>' +
-      muns.map((m) => `<option value="${esc(m.name)}">${esc(m.name)} (${m.total})</option>`).join('');
+    const estados = [...new Set(state.stores.map((s) => s.estado))];
+    $('fEstado').innerHTML = '<option value="">Todos los estados</option>' +
+      estados.map((e) => `<option value="${esc(e)}">${esc(e)}</option>`).join('');
+    fillMunSelect();
 
     renderAZ();
     renderMunList();
@@ -168,31 +173,45 @@
     if (missing.length) toast(`${missing.length} tienda(s) sin ubicación: agrega su municipio en js/geo.js`);
   }
 
-  function municipios() {
+  function fillMunSelect() {
+    const est = $('fEstado').value;
+    $('fMun').innerHTML = '<option value="">' + (est ? `Todo ${esc(est)}` : 'Todos los municipios') + '</option>' +
+      municipios(est).map((m) => `<option value="${esc(m.name)}">${esc(m.name)} (${m.total})</option>`).join('');
+  }
+
+  function municipios(estado) {
     const by = {};
     state.stores.forEach((s) => {
+      if (estado && s.estado !== estado) return;
       const m = by[s.municipio] || (by[s.municipio] = { name: s.municipio, total: 0, phone: 0 });
       m.total++; if (s.telefono) m.phone++;
     });
     return Object.values(by).sort((a, b) => a.name.localeCompare(b.name, 'es'));
   }
 
-  function parseText(text) {
+  function parseCSV(text, estado) {
     const res = Papa.parse(text.replace(/^﻿/, ''), { header: true, skipEmptyLines: true });
-    load(res.data);
+    return res.data.map((r) => ({ ...r, __estado: estado }));
   }
 
-  fetch(CSV_URL, { cache: 'no-cache' })
-    .then((r) => { if (!r.ok) throw new Error(r.status); return r.text(); })
-    .then(parseText)
-    .catch(() => {
-      $('loader').classList.add('hidden');
-      $('fallback').classList.remove('hidden');
-    });
+  // Cada archivo aporta su estado; si uno falla se muestra el resto
+  Promise.all(SOURCES.map((src) =>
+    fetch(src.url, { cache: 'no-cache' })
+      .then((r) => { if (!r.ok) throw new Error(r.status); return r.text(); })
+      .then((t) => parseCSV(t, src.estado))
+      .catch(() => [])
+  )).then((parts) => {
+    const rows = parts.flat();
+    if (!rows.length) throw new Error('sin datos');
+    load(rows);
+  }).catch(() => {
+    $('loader').classList.add('hidden');
+    $('fallback').classList.remove('hidden');
+  });
 
   $('csvFile').addEventListener('change', (e) => {
     const f = e.target.files[0];
-    if (f) f.text().then(parseText);
+    if (f) f.text().then((t) => load(parseCSV(t, /guanajuato/i.test(f.name) ? 'Guanajuato' : 'Jalisco')));
   });
 
   // ---------- Distancia ----------
@@ -217,7 +236,7 @@
   }
 
   function actionsHTML(s) {
-    const dir = s.latlng ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${s.nombre} ${s.municipio} Jalisco`)}` : s.fuente;
+    const dir = s.latlng ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${s.nombre} ${s.municipio} ${s.estado}`)}` : s.fuente;
     return `<div class="actions">
       <button class="btn sm btn-wa" data-act="wa" data-id="${s.id}" ${s.waDigits ? '' : 'disabled'}>💬 WhatsApp</button>
       <a class="btn sm ${s.telefono ? '' : 'disabled'}" ${s.telefono ? `href="tel:+${digits(s.telefono)}"` : ''}>📞 Llamar</a>
@@ -231,7 +250,7 @@
     const d = distKm(s);
     return `<div class="popup">
       <h3>${esc(s.nombre)}</h3>
-      <p class="muted">📍 ${esc(s.municipio)}, Jalisco · ubicación aproximada${d != null ? ` · a ${fmtKm(d)}` : ''}</p>
+      <p class="muted">📍 ${esc(s.municipio)}, ${esc(s.estado)} · ubicación aproximada${d != null ? ` · a ${fmtKm(d)}` : ''}</p>
       ${contactHTML(s)}
       ${actionsHTML(s)}
     </div>`;
@@ -254,16 +273,18 @@
   function applyFilters(fit) {
     const q = GEO.norm($('q').value);
     const mun = $('fMun').value;
+    const est = $('fEstado').value;
     const onlyPhone = $('fPhone').checked;
     const radius = +$('fRadius').value;
 
     state.filtered = state.stores.filter((s) => {
+      if (est && s.estado !== est) return false;
       if (mun && s.municipio !== mun) return false;
       if (onlyPhone && !s.telefono) return false;
       if (state.letter && s.letter !== state.letter) return false;
       if (state.aiIds && !state.aiIds.has(s.id)) return false;
       if (state.near && state.me) { const d = distKm(s); if (d == null || d > radius) return false; }
-      if (q && !GEO.norm(`${s.nombre} ${s.municipio} ${s.telefono || ''} ${digits(s.telefono)}`).includes(q)) return false;
+      if (q && !GEO.norm(`${s.nombre} ${s.municipio} ${s.estado} ${s.telefono || ''} ${digits(s.telefono)}`).includes(q)) return false;
       return true;
     });
 
@@ -310,6 +331,7 @@
   function renderActiveFilters() {
     const chips = [];
     if ($('q').value.trim()) chips.push(['q', `“${$('q').value.trim()}”`]);
+    if ($('fEstado').value) chips.push(['est', `🏞️ ${$('fEstado').value}`]);
     if ($('fMun').value) chips.push(['mun', `📍 ${$('fMun').value}`]);
     if (state.near) chips.push(['near', `🎯 ≤ ${$('fRadius').value} km de ti`]);
     if (state.letter) chips.push(['letter', `Letra ${state.letter}`]);
@@ -321,6 +343,7 @@
 
   function clearFilter(k) {
     if (k === 'q' || k === 'all') $('q').value = '';
+    if (k === 'est' || k === 'all') { $('fEstado').value = ''; fillMunSelect(); }
     if (k === 'mun' || k === 'all') $('fMun').value = '';
     if (k === 'near' || k === 'all') setNear(false);
     if (k === 'letter' || k === 'all') state.letter = '';
@@ -413,6 +436,7 @@
   // ---------- Eventos de filtros ----------
   let qTimer;
   $('q').addEventListener('input', () => { clearTimeout(qTimer); qTimer = setTimeout(() => applyFilters(true), 200); });
+  $('fEstado').addEventListener('change', () => { fillMunSelect(); applyFilters(true); });
   $('fMun').addEventListener('change', () => { if ($('fMun').value) setNear(false); applyFilters(true); });
   $('fPhone').addEventListener('change', () => applyFilters(false));
   $('fSort').addEventListener('change', () => {
@@ -428,6 +452,8 @@
   $('munList').addEventListener('click', (e) => {
     const b = e.target.closest('[data-mun]');
     if (!b) return;
+    $('fEstado').value = '';
+    fillMunSelect();
     $('fMun').value = b.dataset.mun;
     setNear(false);
     switchTab('stores');
@@ -501,7 +527,7 @@
       const r = await AI.ask('search', {
         question,
         municipios: municipios().map((m) => m.name),
-        stores: state.stores.map((s) => ({ id: s.id, nombre: s.nombre, municipio: s.municipio, tel: !!s.telefono })),
+        stores: state.stores.map((s) => ({ id: s.id, nombre: s.nombre, municipio: s.municipio, estado: s.estado, tel: !!s.telefono })),
       });
       wait.remove();
       const ids = (r.ids || []).filter((id) => state.stores.some((s) => s.id === id));
@@ -509,6 +535,8 @@
       $('q').value = '';
       state.letter = '';
       setNear(false);
+      $('fEstado').value = '';
+      fillMunSelect();
       $('fMun').value = r.municipio && municipios().some((m) => m.name === r.municipio) ? r.municipio : '';
       $('fPhone').checked = !!r.soloTelefono;
       state.aiIds = ids.length ? new Set(ids) : null;
@@ -540,7 +568,7 @@
   });
   $('btnExport').addEventListener('click', () => {
     const csv = Papa.unparse(state.filtered.map((s) => ({
-      nombre: s.nombre, municipio: s.municipio, telefono: s.telefono || 'ND',
+      nombre: s.nombre, municipio: s.municipio, estado: s.estado, telefono: s.telefono || 'ND',
       correo: s.correo || 'ND', whatsapp: s.waDigits ? '+' + s.waDigits : 'ND',
       wa_link: s.waDigits ? `https://wa.me/${s.waDigits}` : '', url_fuente: s.fuente || '',
     })));

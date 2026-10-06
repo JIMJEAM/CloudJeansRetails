@@ -11,7 +11,7 @@ window.WA = (function () {
   const BUILTIN = [
     {
       id: 'presentacion', name: '🤝 Presentación de proveedor',
-      text: '¡Hola, *{nombre}*! 👋\n\nSoy {mi_nombre}, proveedor de ropa en Jalisco 🛍️. Nos encantaría ser parte de su inventario en *{municipio}*.\n\n✅ Precios de mayoreo\n✅ Envíos a todo Jalisco 🚚\n✅ Nuevas colecciones cada mes ✨\n\n¿Le puedo compartir nuestro catálogo? 📲',
+      text: '¡Hola, *{nombre}*! 👋\n\nSoy {mi_nombre}, proveedor de ropa 🛍️. Nos encantaría ser parte de su inventario en *{municipio}*.\n\n✅ Precios de mayoreo\n✅ Envíos a {municipio} y alrededores 🚚\n✅ Nuevas colecciones cada mes ✨\n\n¿Le puedo compartir nuestro catálogo? 📲',
     },
     {
       id: 'mayoreo', name: '💰 Oferta de mayoreo',
