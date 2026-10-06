@@ -1,4 +1,4 @@
-# 🛍️ Mapa Retail · Tiendas de Ropa (Jalisco y Guanajuato)
+# 🛍️ Mapa Retail · Tiendas de Ropa (Jalisco, Guanajuato y Nuevo León)
 
 Web app estática (HTML + CSS + JS, sin build) que muestra en un mapa las tiendas de ropa de
 `data/tiendas_ropa_jalisco_final.csv` y `data/tiendas_ropa_guanajuato_final.csv`, permite consultar teléfono / email / WhatsApp y trae un
@@ -24,7 +24,7 @@ editor de mensajes de WhatsApp que genera enlaces `wa.me`.
 - Tema claro/oscuro y diseño móvil (la lista se vuelve un panel deslizable).
 
 ## Datos
-- La app lee un CSV por estado, listados en `SOURCES` de `js/app.js` (Jalisco: `data/tiendas_ropa_jalisco_final.csv`, Guanajuato: `data/tiendas_ropa_guanajuato_final.csv`); el estado se toma del archivo. Para actualizar datos, reemplaza el archivo con las mismas columnas:
+- La app lee un CSV por estado, listados en `SOURCES` de `js/app.js` (Jalisco: `data/tiendas_ropa_jalisco_final.csv`, Guanajuato: `data/tiendas_ropa_guanajuato_final.csv`, Nuevo León: `data/tiendas_ropa_nuevo-leon_final.csv`); el estado se toma del archivo. Para actualizar datos, reemplaza el archivo con las mismas columnas:
   `nombre,municipio,teléfono,correo,WhatsApp,sitio_red,url_fuente`. `ND` = no disponible.
 - El CSV no trae coordenadas: cada tienda se ubica en el **centro aproximado de su municipio** (`js/geo.js`).
   Si agregas un municipio nuevo, añade su latitud/longitud ahí.

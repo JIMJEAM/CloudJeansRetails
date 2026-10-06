@@ -2,6 +2,7 @@
   const SOURCES = [
     { estado: 'Jalisco', url: 'data/tiendas_ropa_jalisco_final.csv' },
     { estado: 'Guanajuato', url: 'data/tiendas_ropa_guanajuato_final.csv' },
+    { estado: 'Nuevo León', url: 'data/tiendas_ropa_nuevo-leon_final.csv' },
   ];
   const $ = (id) => document.getElementById(id);
   const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -211,7 +212,7 @@
 
   $('csvFile').addEventListener('change', (e) => {
     const f = e.target.files[0];
-    if (f) f.text().then((t) => load(parseCSV(t, /guanajuato/i.test(f.name) ? 'Guanajuato' : 'Jalisco')));
+    if (f) f.text().then((t) => load(parseCSV(t, /guanajuato/i.test(f.name) ? 'Guanajuato' : /nuevo.?leon/i.test(f.name) ? 'Nuevo León' : 'Jalisco')));
   });
 
   // ---------- Distancia ----------
