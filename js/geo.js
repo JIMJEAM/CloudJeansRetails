@@ -103,6 +103,27 @@ window.GEO = {
     'santa catarina': [25.6733, -100.4586],
     'santiago': [25.4231, -100.1522],
     'villaldama': [26.5000, -100.4333],
+    // Coahuila (Allende de Coahuila usa clave con estado: choca con el de Nuevo León)
+    'allende|coahuila': [28.3367, -100.8500],
+    'arteaga': [25.4433, -100.8467],
+    'castanos': [26.7903, -101.4217],
+    'ciudad acuna': [29.3233, -100.9522],
+    'cuatro cienegas': [26.9869, -102.0653],
+    'francisco i. madero': [25.7753, -103.2736],
+    'matamoros': [25.5283, -103.2486],
+    'monclova': [26.9069, -101.4217],
+    'muzquiz': [27.8769, -101.5167],
+    'nava': [28.4222, -100.7683],
+    'parras de la fuente': [25.4431, -102.1789],
+    'piedras negras': [28.7000, -100.5233],
+    'ramos arizpe': [25.5411, -100.9486],
+    'sabinas': [27.8500, -101.1167],
+    'saltillo': [25.4232, -101.0053],
+    'san buenaventura': [27.0614, -101.5361],
+    'san juan de sabinas': [27.9333, -101.3000],
+    'san pedro': [25.7597, -102.9833],
+    'torreon': [25.5428, -103.4068],
+    'zaragoza': [28.4811, -100.9189],
   },
 };
 
@@ -112,8 +133,9 @@ window.GEO.norm = (s) => (s || '')
 
 // Posición estable: centroide + desplazamiento determinista según el nombre,
 // para que las tiendas del mismo municipio no se encimen.
-window.GEO.locate = function (municipio, nombre) {
-  const base = this.municipios[this.norm(municipio)];
+window.GEO.locate = function (municipio, nombre, estado) {
+  const m = this.norm(municipio);
+  const base = this.municipios[`${m}|${this.norm(estado)}`] || this.municipios[m];
   if (!base) return null;
   let h = 2166136261;
   for (const ch of nombre || '') { h ^= ch.charCodeAt(0); h = Math.imul(h, 16777619); }

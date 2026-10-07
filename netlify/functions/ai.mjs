@@ -20,7 +20,7 @@ function buildSearch(input) {
   const municipios = (Array.isArray(input.municipios) ? input.municipios : []).map((m) => clip(m, 40));
   return {
     prompt:
-`Eres el asistente de un mapa de tiendas de ropa en Jalisco, Guanajuato y Nuevo León, México. Responde en español, breve y útil.
+`Eres el asistente de un mapa de tiendas de ropa en Jalisco, Guanajuato, Nuevo León y Coahuila, México. Responde en español, breve y útil.
 Lista de tiendas (id|nombre|municipio|estado|teléfono):
 ${stores}
 

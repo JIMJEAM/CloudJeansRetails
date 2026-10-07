@@ -3,6 +3,7 @@
     { estado: 'Jalisco', url: 'data/tiendas_ropa_jalisco_final.csv' },
     { estado: 'Guanajuato', url: 'data/tiendas_ropa_guanajuato_final.csv' },
     { estado: 'Nuevo León', url: 'data/tiendas_ropa_nuevo-leon_final.csv' },
+    { estado: 'Coahuila', url: 'data/tiendas_ropa_coahuila_final.csv' },
   ];
   const $ = (id) => document.getElementById(id);
   const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -139,7 +140,7 @@
       let wa = digits(whatsapp || telefono);
       if (wa.length === 10) wa = '52' + wa; // número nacional sin lada de país
       s.waDigits = wa.length >= 11 ? wa : null;
-      s.latlng = GEO.locate(s.municipio, s.nombre);
+      s.latlng = GEO.locate(s.municipio, s.nombre, s.estado);
       if (telefono) phoneCount[digits(telefono)] = (phoneCount[digits(telefono)] || 0) + 1;
       return s;
     });
@@ -212,7 +213,7 @@
 
   $('csvFile').addEventListener('change', (e) => {
     const f = e.target.files[0];
-    if (f) f.text().then((t) => load(parseCSV(t, /guanajuato/i.test(f.name) ? 'Guanajuato' : /nuevo.?leon/i.test(f.name) ? 'Nuevo León' : 'Jalisco')));
+    if (f) f.text().then((t) => load(parseCSV(t, /guanajuato/i.test(f.name) ? 'Guanajuato' : /nuevo.?leon/i.test(f.name) ? 'Nuevo León' : /coahuila/i.test(f.name) ? 'Coahuila' : 'Jalisco')));
   });
 
   // ---------- Distancia ----------
