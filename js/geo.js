@@ -494,6 +494,14 @@ window.GEO = {
     'comondu': [26.0833, -111.8500],
     'mulege': [26.8833, -111.9833],
     'loreto': [26.0114, -111.3481],
+    // Baja California (San Felipe choca con Guanajuato: clave con estado)
+    'tijuana': [32.5149, -117.0382],
+    'mexicali': [32.6245, -115.4523],
+    'ensenada': [31.8667, -116.5964],
+    'playas de rosarito': [32.3333, -117.0333],
+    'tecate': [32.5667, -116.6250],
+    'san felipe|baja california': [31.0253, -114.8386],
+    'san quintin': [30.5667, -115.9333],
   },
 };
 

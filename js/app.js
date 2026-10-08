@@ -13,6 +13,7 @@
     { estado: 'Aguascalientes', url: 'data/tiendas_ropa_Aguascalientes_final.csv' },
     { estado: 'Michoacán', url: 'data/tiendas_ropa_michoacan_final.csv' },
     { estado: 'Baja California Sur', url: 'data/tiendas_ropa_baja_california_sur_final.csv' },
+    { estado: 'Baja California', url: 'data/tiendas_ropa_baja_california_norte_final.csv' },
   ];
   const $ = (id) => document.getElementById(id);
   const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -222,7 +223,7 @@
 
   $('csvFile').addEventListener('change', (e) => {
     const f = e.target.files[0];
-    if (f) f.text().then((t) => load(parseCSV(t, /guanajuato/i.test(f.name) ? 'Guanajuato' : /nuevo.?leon/i.test(f.name) ? 'Nuevo León' : /coahuila/i.test(f.name) ? 'Coahuila' : /sonora/i.test(f.name) ? 'Sonora' : /sinaloa/i.test(f.name) ? 'Sinaloa' : /nayarit/i.test(f.name) ? 'Nayarit' : /durango/i.test(f.name) ? 'Durango' : /chihuahua/i.test(f.name) ? 'Chihuahua' : /san.?luis/i.test(f.name) ? 'San Luis Potosí' : /aguascalientes/i.test(f.name) ? 'Aguascalientes' : /michoacan/i.test(f.name) ? 'Michoacán' : /baja.?california.?sur/i.test(f.name) ? 'Baja California Sur' : 'Jalisco')));
+    if (f) f.text().then((t) => load(parseCSV(t, /guanajuato/i.test(f.name) ? 'Guanajuato' : /nuevo.?leon/i.test(f.name) ? 'Nuevo León' : /coahuila/i.test(f.name) ? 'Coahuila' : /sonora/i.test(f.name) ? 'Sonora' : /sinaloa/i.test(f.name) ? 'Sinaloa' : /nayarit/i.test(f.name) ? 'Nayarit' : /durango/i.test(f.name) ? 'Durango' : /chihuahua/i.test(f.name) ? 'Chihuahua' : /san.?luis/i.test(f.name) ? 'San Luis Potosí' : /aguascalientes/i.test(f.name) ? 'Aguascalientes' : /michoacan/i.test(f.name) ? 'Michoacán' : /baja.?california.?sur/i.test(f.name) ? 'Baja California Sur' : /baja.?california/i.test(f.name) ? 'Baja California' : 'Jalisco')));
   });
 
   // ---------- Distancia ----------
