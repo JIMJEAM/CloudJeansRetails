@@ -5,6 +5,9 @@
     { estado: 'Nuevo León', url: 'data/tiendas_ropa_nuevo-leon_final.csv' },
     { estado: 'Coahuila', url: 'data/tiendas_ropa_coahuila_final.csv' },
     { estado: 'Sonora', url: 'data/tiendas_ropa_sonora_final.csv' },
+    { estado: 'Sinaloa', url: 'data/tiendas_ropa_sinaloa_final.csv' },
+    { estado: 'Nayarit', url: 'data/tiendas_ropa_Nayarit_final.csv' },
+    { estado: 'Durango', url: 'data/tiendas_ropa_durango_final.csv' },
   ];
   const $ = (id) => document.getElementById(id);
   const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -214,7 +217,7 @@
 
   $('csvFile').addEventListener('change', (e) => {
     const f = e.target.files[0];
-    if (f) f.text().then((t) => load(parseCSV(t, /guanajuato/i.test(f.name) ? 'Guanajuato' : /nuevo.?leon/i.test(f.name) ? 'Nuevo León' : /coahuila/i.test(f.name) ? 'Coahuila' : /sonora/i.test(f.name) ? 'Sonora' : 'Jalisco')));
+    if (f) f.text().then((t) => load(parseCSV(t, /guanajuato/i.test(f.name) ? 'Guanajuato' : /nuevo.?leon/i.test(f.name) ? 'Nuevo León' : /coahuila/i.test(f.name) ? 'Coahuila' : /sonora/i.test(f.name) ? 'Sonora' : /sinaloa/i.test(f.name) ? 'Sinaloa' : /nayarit/i.test(f.name) ? 'Nayarit' : /durango/i.test(f.name) ? 'Durango' : 'Jalisco')));
   });
 
   // ---------- Distancia ----------
