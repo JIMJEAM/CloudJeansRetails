@@ -363,6 +363,18 @@ window.GEO = {
     'villa de guadalupe': [23.3500, -100.7167],
     'san ciro de acosta': [21.6167, -99.4000],
     'catorce': [23.6833, -100.8167],
+    // Aguascalientes
+    'aguascalientes': [21.8853, -102.2916],
+    'rincon de romos': [22.2339, -102.3178],
+    'jesus maria': [21.9617, -102.3433],
+    'pabellon de arteaga': [22.1486, -102.2767],
+    'san francisco de los romo': [22.0731, -102.2736],
+    'calvillo': [21.8472, -102.7192],
+    'asientos': [22.2392, -102.0894],
+    'el llano': [21.9136, -102.0225],
+    'tepezala': [22.2194, -102.1692],
+    'cosio': [22.3672, -102.3017],
+    'san jose de gracia': [22.1517, -102.4167],
   },
 };
 
