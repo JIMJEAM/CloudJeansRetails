@@ -17,6 +17,8 @@
     { estado: 'Querétaro', url: 'data/tiendas_ropa_Queretaro_final.csv' },
     { estado: 'Hidalgo', url: 'data/tiendas_ropa_hidalgo_final.csv' },
     { estado: 'Estado de México', url: 'data/clientes_jeans_Estado_de_Mexico.csv' },
+    { estado: 'Ciudad de México', url: 'data/tiendas_ropa_CDMX_final.csv' },
+    { estado: 'Puebla', url: 'data/tiendas_ropa_puebla_final.csv' },
   ];
   const $ = (id) => document.getElementById(id);
   const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -172,7 +174,6 @@
 
   function load(rows) {
     state.stores = normalizeRows(rows);
-    $('loader').classList.add('hidden');
     $('fallback').classList.add('hidden');
 
     const estados = [...new Set(state.stores.map((s) => s.estado))];
@@ -186,6 +187,7 @@
     applyFilters(true);
     const missing = state.stores.filter((s) => !s.latlng);
     if (missing.length) toast(`${missing.length} tienda(s) sin ubicación: agrega su municipio en js/geo.js`);
+    hideLoader();
   }
 
   function fillMunSelect() {
@@ -212,12 +214,62 @@
   // Cada archivo aporta su estado; si uno falla se muestra el resto
   let loaded = 0;
   $('loaderChips').innerHTML = SOURCES.map((s) => `<span data-e="${esc(s.estado)}">${esc(s.estado)}</span>`).join('');
+
+  // Porcentaje con conteo suave (acompaña la transición de la barra)
+  let shownPct = 0;
+  let pctRaf = 0;
+  const showPct = (target) => {
+    cancelAnimationFrame(pctRaf);
+    const step = () => {
+      shownPct = Math.min(target, shownPct + Math.max(1, Math.ceil((target - shownPct) / 6)));
+      $('loaderPct').textContent = `${shownPct}%`;
+      if (shownPct < target) pctRaf = requestAnimationFrame(step);
+    };
+    step();
+  };
+
+  // Consejos que rotan mientras se espera
+  const TIPS = [
+    '💡 Usa “📍 Cerca de mí” para ver las tiendas más próximas.',
+    '💬 Escribe a cualquier tienda por WhatsApp desde su tarjeta.',
+    '🔎 Busca por nombre de tienda, marca, municipio o teléfono.',
+    '📥 Exporta la lista filtrada a CSV con los enlaces de WhatsApp.',
+    '🤖 Pregúntale al asistente de IA qué tiendas te convienen.',
+  ];
+  let tipIdx = 0;
+  const tipEl = $('loaderTip');
+  tipEl.textContent = TIPS[0];
+  const tipTimer = setInterval(() => {
+    tipEl.classList.add('swap');
+    setTimeout(() => { tipIdx = (tipIdx + 1) % TIPS.length; tipEl.textContent = TIPS[tipIdx]; tipEl.classList.remove('swap'); }, 250);
+  }, 3200);
+
+  // Cierra con un "¡Listo!" y se desvanece (idempotente: también se llama al cargar un CSV a mano)
+  function hideLoader(failed) {
+    const el = $('loader');
+    if (el.classList.contains('hidden') || el.classList.contains('done')) return;
+    clearInterval(tipTimer);
+    if (failed) { el.classList.add('hidden'); return; }
+    el.classList.add('done');
+    $('loaderBar').style.width = '100%';
+    showPct(100);
+    $('loaderTitle').textContent = '¡Listo!';
+    $('loaderIcon').textContent = '✅';
+    $('loaderText').textContent = `${state.stores.length.toLocaleString('es-MX')} tiendas en ${new Set(state.stores.map((s) => s.estado)).size} estados`;
+    tipEl.textContent = '';
+    setTimeout(() => {
+      el.classList.add('leaving');
+      setTimeout(() => el.classList.add('hidden'), 450);
+    }, 900);
+  }
+
   const tick = (estado, ok) => {
     loaded++;
-    const pct = Math.round((loaded / SOURCES.length) * 100);
+    // Descarga = 90 % de la barra; el 10 % restante es ubicar las tiendas en el mapa
+    const pct = Math.round((loaded / SOURCES.length) * 90);
     $('loaderBar').style.width = `${pct}%`;
-    $('loaderPct').textContent = `${pct}%`;
-    $('loaderText').textContent = `${loaded} de ${SOURCES.length} estados · por favor espera…`;
+    showPct(pct);
+    $('loaderText').textContent = `${loaded} de ${SOURCES.length} estados descargados…`;
     const chip = [...$('loaderChips').children].find((c) => c.dataset.e === estado);
     if (chip) chip.classList.add(ok ? 'done' : 'fail');
   };
@@ -229,15 +281,26 @@
   )).then((parts) => {
     const rows = parts.flat();
     if (!rows.length) throw new Error('sin datos');
-    load(rows);
+    // Fase final: se pinta el 90 % antes de que el trabajo pesado bloquee el hilo
+    $('loaderTitle').textContent = 'Ubicando tiendas en el mapa…';
+    $('loaderText').textContent = `${rows.length.toLocaleString('es-MX')} tiendas · casi listo`;
+    $('loaderBar').style.width = '96%';
+    showPct(96);
+    setTimeout(() => {
+      try { load(rows); } catch (err) {
+        console.error(err);
+        hideLoader(true);
+        $('fallback').classList.remove('hidden');
+      }
+    }, 80);
   }).catch(() => {
-    $('loader').classList.add('hidden');
+    hideLoader(true);
     $('fallback').classList.remove('hidden');
   });
 
   $('csvFile').addEventListener('change', (e) => {
     const f = e.target.files[0];
-    if (f) f.text().then((t) => load(parseCSV(t, /guanajuato/i.test(f.name) ? 'Guanajuato' : /nuevo.?leon/i.test(f.name) ? 'Nuevo León' : /coahuila/i.test(f.name) ? 'Coahuila' : /sonora/i.test(f.name) ? 'Sonora' : /sinaloa/i.test(f.name) ? 'Sinaloa' : /nayarit/i.test(f.name) ? 'Nayarit' : /durango/i.test(f.name) ? 'Durango' : /chihuahua/i.test(f.name) ? 'Chihuahua' : /san.?luis/i.test(f.name) ? 'San Luis Potosí' : /aguascalientes/i.test(f.name) ? 'Aguascalientes' : /michoacan/i.test(f.name) ? 'Michoacán' : /baja.?california.?sur/i.test(f.name) ? 'Baja California Sur' : /baja.?california/i.test(f.name) ? 'Baja California' : /queretaro/i.test(f.name) ? 'Querétaro' : /hidalgo/i.test(f.name) ? 'Hidalgo' : /estado.?de.?mexico/i.test(f.name) ? 'Estado de México' : 'Jalisco')));
+    if (f) f.text().then((t) => load(parseCSV(t, /guanajuato/i.test(f.name) ? 'Guanajuato' : /nuevo.?leon/i.test(f.name) ? 'Nuevo León' : /coahuila/i.test(f.name) ? 'Coahuila' : /sonora/i.test(f.name) ? 'Sonora' : /sinaloa/i.test(f.name) ? 'Sinaloa' : /nayarit/i.test(f.name) ? 'Nayarit' : /durango/i.test(f.name) ? 'Durango' : /chihuahua/i.test(f.name) ? 'Chihuahua' : /san.?luis/i.test(f.name) ? 'San Luis Potosí' : /aguascalientes/i.test(f.name) ? 'Aguascalientes' : /michoacan/i.test(f.name) ? 'Michoacán' : /baja.?california.?sur/i.test(f.name) ? 'Baja California Sur' : /baja.?california/i.test(f.name) ? 'Baja California' : /queretaro/i.test(f.name) ? 'Querétaro' : /hidalgo/i.test(f.name) ? 'Hidalgo' : /estado.?de.?mexico/i.test(f.name) ? 'Estado de México' : /cdmx|ciudad.?de.?mexico/i.test(f.name) ? 'Ciudad de México' : /puebla/i.test(f.name) ? 'Puebla' : 'Jalisco')));
   });
 
   // ---------- Distancia ----------

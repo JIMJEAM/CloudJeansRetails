@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Mapa Retail · Tiendas de Ropa en México</title>
-  <meta name="description" content="Mapa de tiendas de ropa en 17 estados de México con datos de contacto y editor de mensajes de WhatsApp.">
+  <meta name="description" content="Mapa de tiendas de ropa en 19 estados de México con datos de contacto y editor de mensajes de WhatsApp.">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛍️</text></svg>">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.min.css">
@@ -14,12 +14,13 @@
 <body>
         <div class="loader" id="loader" role="status" aria-live="polite">
           <div class="loader-card">
-            <div class="loader-icon">🛍️</div>
-            <h2>Cargando tiendas de todo México…</h2>
+            <div class="loader-icon" id="loaderIcon">🛍️</div>
+            <h2 id="loaderTitle">Cargando tiendas de todo México…</h2>
             <p id="loaderText">Esto puede tardar unos segundos, por favor espera.</p>
             <div class="loader-pct" id="loaderPct">0%</div>
             <span class="bar"><i id="loaderBar"></i></span>
             <div class="loader-chips" id="loaderChips"></div>
+            <p class="loader-tip" id="loaderTip"></p>
           </div>
         </div>
   <header class="topbar">
@@ -27,7 +28,7 @@
       <span class="logo">🛍️👖</span>
       <div>
         <h1>Mapa Retail · Tiendas de Ropa</h1>
-        <p class="sub marquee" aria-label="Jalisco, Guanajuato, Nuevo León, Coahuila, Sonora, Sinaloa, Nayarit, Durango, Chihuahua, San Luis Potosí, Aguascalientes, Michoacán, Baja California Sur, Baja California, Querétaro, Hidalgo y Estado de México, México"><span aria-hidden="true">★ Jalisco ★ Guanajuato ★ Nuevo León ★ Coahuila ★ Sonora ★ Sinaloa ★ Nayarit ★ Durango ★ Chihuahua ★ San Luis Potosí ★ Aguascalientes ★ Michoacán ★ Baja California Sur ★ Baja California ★ Querétaro ★ Hidalgo ★ Estado de México ★ México ★</span></p>
+        <p class="sub marquee" aria-label="Jalisco, Guanajuato, Nuevo León, Coahuila, Sonora, Sinaloa, Nayarit, Durango, Chihuahua, San Luis Potosí, Aguascalientes, Michoacán, Baja California Sur, Baja California, Querétaro, Hidalgo, Estado de México, Ciudad de México y Puebla, México"><span aria-hidden="true">★ Jalisco ★ Guanajuato ★ Nuevo León ★ Coahuila ★ Sonora ★ Sinaloa ★ Nayarit ★ Durango ★ Chihuahua ★ San Luis Potosí ★ Aguascalientes ★ Michoacán ★ Baja California Sur ★ Baja California ★ Querétaro ★ Hidalgo ★ Estado de México ★ Ciudad de México ★ Puebla ★ México ★</span></p>
       </div>
     </div>
 
@@ -57,6 +58,7 @@
     </form>
 
     <div class="top-actions">
+      <a id="btnForm" class="btn btn-pulse" href="https://drive.google.com/drive/folders/1u2pnd1ARjuv8UUclGtOOmIAx1Nd-VD1v?usp=sharing" target="_blank" rel="noopener noreferrer" title="Abrir la carpeta de Google Drive con el formulario de prospección de clientes">📋 Formulario de prospección</a>
       <button id="btnBulk" class="btn btn-wa" title="Crear mensaje para todas las tiendas filtradas">💬 Masivo</button>
       <button id="btnNew" class="btn" title="Editor con número manual">✍️ Editor WA</button>
       <button id="btnExport" class="btn" title="Exportar lista filtrada">⬇️ CSV</button>
