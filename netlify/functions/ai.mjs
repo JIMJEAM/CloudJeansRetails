@@ -20,7 +20,7 @@ function buildSearch(input) {
   const municipios = (Array.isArray(input.municipios) ? input.municipios : []).map((m) => clip(m, 40));
   return {
     prompt:
-`Eres el asistente de un mapa de tiendas de ropa en Jalisco, Guanajuato, Nuevo León, Coahuila, Sonora, Sinaloa, Nayarit, Durango, Chihuahua, San Luis Potosí, Aguascalientes, Michoacán, Baja California Sur, Baja California, Querétaro e Hidalgo, México. Responde en español, breve y útil.
+`Eres el asistente de un mapa de tiendas de ropa en Jalisco, Guanajuato, Nuevo León, Coahuila, Sonora, Sinaloa, Nayarit, Durango, Chihuahua, San Luis Potosí, Aguascalientes, Michoacán, Baja California Sur, Baja California, Querétaro, Hidalgo y Estado de México, México. Responde en español, breve y útil.
 Lista de tiendas (id|nombre|municipio|estado|teléfono):
 ${stores}
 

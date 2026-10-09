@@ -16,6 +16,7 @@
     { estado: 'Baja California', url: 'data/tiendas_ropa_baja_california_norte_final.csv' },
     { estado: 'Querétaro', url: 'data/tiendas_ropa_Queretaro_final.csv' },
     { estado: 'Hidalgo', url: 'data/tiendas_ropa_hidalgo_final.csv' },
+    { estado: 'Estado de México', url: 'data/clientes_jeans_Estado_de_Mexico.csv' },
   ];
   const $ = (id) => document.getElementById(id);
   const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -236,7 +237,7 @@
 
   $('csvFile').addEventListener('change', (e) => {
     const f = e.target.files[0];
-    if (f) f.text().then((t) => load(parseCSV(t, /guanajuato/i.test(f.name) ? 'Guanajuato' : /nuevo.?leon/i.test(f.name) ? 'Nuevo León' : /coahuila/i.test(f.name) ? 'Coahuila' : /sonora/i.test(f.name) ? 'Sonora' : /sinaloa/i.test(f.name) ? 'Sinaloa' : /nayarit/i.test(f.name) ? 'Nayarit' : /durango/i.test(f.name) ? 'Durango' : /chihuahua/i.test(f.name) ? 'Chihuahua' : /san.?luis/i.test(f.name) ? 'San Luis Potosí' : /aguascalientes/i.test(f.name) ? 'Aguascalientes' : /michoacan/i.test(f.name) ? 'Michoacán' : /baja.?california.?sur/i.test(f.name) ? 'Baja California Sur' : /baja.?california/i.test(f.name) ? 'Baja California' : /queretaro/i.test(f.name) ? 'Querétaro' : /hidalgo/i.test(f.name) ? 'Hidalgo' : 'Jalisco')));
+    if (f) f.text().then((t) => load(parseCSV(t, /guanajuato/i.test(f.name) ? 'Guanajuato' : /nuevo.?leon/i.test(f.name) ? 'Nuevo León' : /coahuila/i.test(f.name) ? 'Coahuila' : /sonora/i.test(f.name) ? 'Sonora' : /sinaloa/i.test(f.name) ? 'Sinaloa' : /nayarit/i.test(f.name) ? 'Nayarit' : /durango/i.test(f.name) ? 'Durango' : /chihuahua/i.test(f.name) ? 'Chihuahua' : /san.?luis/i.test(f.name) ? 'San Luis Potosí' : /aguascalientes/i.test(f.name) ? 'Aguascalientes' : /michoacan/i.test(f.name) ? 'Michoacán' : /baja.?california.?sur/i.test(f.name) ? 'Baja California Sur' : /baja.?california/i.test(f.name) ? 'Baja California' : /queretaro/i.test(f.name) ? 'Querétaro' : /hidalgo/i.test(f.name) ? 'Hidalgo' : /estado.?de.?mexico/i.test(f.name) ? 'Estado de México' : 'Jalisco')));
   });
 
   // ---------- Distancia ----------
