@@ -15,6 +15,7 @@
     { estado: 'Baja California Sur', url: 'data/tiendas_ropa_baja_california_sur_final.csv' },
     { estado: 'Baja California', url: 'data/tiendas_ropa_baja_california_norte_final.csv' },
     { estado: 'Querétaro', url: 'data/tiendas_ropa_Queretaro_final.csv' },
+    { estado: 'Hidalgo', url: 'data/tiendas_ropa_hidalgo_final.csv' },
   ];
   const $ = (id) => document.getElementById(id);
   const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -208,11 +209,22 @@
   }
 
   // Cada archivo aporta su estado; si uno falla se muestra el resto
+  let loaded = 0;
+  $('loaderChips').innerHTML = SOURCES.map((s) => `<span data-e="${esc(s.estado)}">${esc(s.estado)}</span>`).join('');
+  const tick = (estado, ok) => {
+    loaded++;
+    const pct = Math.round((loaded / SOURCES.length) * 100);
+    $('loaderBar').style.width = `${pct}%`;
+    $('loaderPct').textContent = `${pct}%`;
+    $('loaderText').textContent = `${loaded} de ${SOURCES.length} estados · por favor espera…`;
+    const chip = [...$('loaderChips').children].find((c) => c.dataset.e === estado);
+    if (chip) chip.classList.add(ok ? 'done' : 'fail');
+  };
   Promise.all(SOURCES.map((src) =>
     fetch(src.url, { cache: 'no-cache' })
       .then((r) => { if (!r.ok) throw new Error(r.status); return r.text(); })
-      .then((t) => parseCSV(t, src.estado))
-      .catch(() => [])
+      .then((t) => { const rows = parseCSV(t, src.estado); tick(src.estado, true); return rows; })
+      .catch(() => { tick(src.estado, false); return []; })
   )).then((parts) => {
     const rows = parts.flat();
     if (!rows.length) throw new Error('sin datos');
@@ -224,7 +236,7 @@
 
   $('csvFile').addEventListener('change', (e) => {
     const f = e.target.files[0];
-    if (f) f.text().then((t) => load(parseCSV(t, /guanajuato/i.test(f.name) ? 'Guanajuato' : /nuevo.?leon/i.test(f.name) ? 'Nuevo León' : /coahuila/i.test(f.name) ? 'Coahuila' : /sonora/i.test(f.name) ? 'Sonora' : /sinaloa/i.test(f.name) ? 'Sinaloa' : /nayarit/i.test(f.name) ? 'Nayarit' : /durango/i.test(f.name) ? 'Durango' : /chihuahua/i.test(f.name) ? 'Chihuahua' : /san.?luis/i.test(f.name) ? 'San Luis Potosí' : /aguascalientes/i.test(f.name) ? 'Aguascalientes' : /michoacan/i.test(f.name) ? 'Michoacán' : /baja.?california.?sur/i.test(f.name) ? 'Baja California Sur' : /baja.?california/i.test(f.name) ? 'Baja California' : /queretaro/i.test(f.name) ? 'Querétaro' : 'Jalisco')));
+    if (f) f.text().then((t) => load(parseCSV(t, /guanajuato/i.test(f.name) ? 'Guanajuato' : /nuevo.?leon/i.test(f.name) ? 'Nuevo León' : /coahuila/i.test(f.name) ? 'Coahuila' : /sonora/i.test(f.name) ? 'Sonora' : /sinaloa/i.test(f.name) ? 'Sinaloa' : /nayarit/i.test(f.name) ? 'Nayarit' : /durango/i.test(f.name) ? 'Durango' : /chihuahua/i.test(f.name) ? 'Chihuahua' : /san.?luis/i.test(f.name) ? 'San Luis Potosí' : /aguascalientes/i.test(f.name) ? 'Aguascalientes' : /michoacan/i.test(f.name) ? 'Michoacán' : /baja.?california.?sur/i.test(f.name) ? 'Baja California Sur' : /baja.?california/i.test(f.name) ? 'Baja California' : /queretaro/i.test(f.name) ? 'Querétaro' : /hidalgo/i.test(f.name) ? 'Hidalgo' : 'Jalisco')));
   });
 
   // ---------- Distancia ----------
