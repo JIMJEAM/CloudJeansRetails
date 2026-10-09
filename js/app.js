@@ -111,7 +111,7 @@
   new HomeCtl().addTo(map);
 
   const cluster = L.markerClusterGroup({
-    showCoverageOnHover: false, maxClusterRadius: 45, spiderfyOnMaxZoom: true,
+    showCoverageOnHover: false, maxClusterRadius: 45, spiderfyOnMaxZoom: true, chunkedLoading: true,
     iconCreateFunction: (c) => {
       const n = c.getChildCount();
       const size = n < 5 ? 36 : n < 15 ? 44 : 52;
@@ -136,9 +136,10 @@
 
   function normalizeRows(rows) {
     const phoneCount = {};
+    const keyNorm = new Map();
     const stores = rows.map((raw, i) => {
       const r = {};
-      for (const k of Object.keys(raw)) r[GEO.norm(k)] = raw[k];
+      for (const k of Object.keys(raw)) r[keyNorm.get(k) ?? (keyNorm.set(k, GEO.norm(k)), keyNorm.get(k))] = raw[k];
       const telefono = clean(r['telefono']);
       const whatsapp = clean(r['whatsapp']);
       const s = {
@@ -259,8 +260,8 @@
     tipEl.textContent = '';
     setTimeout(() => {
       el.classList.add('leaving');
-      setTimeout(() => el.classList.add('hidden'), 450);
-    }, 900);
+      setTimeout(() => el.classList.add('hidden'), 300);
+    }, 350);
   }
 
   const tick = (estado, ok) => {
@@ -292,7 +293,7 @@
         hideLoader(true);
         $('fallback').classList.remove('hidden');
       }
-    }, 80);
+    }, 30);
   }).catch(() => {
     hideLoader(true);
     $('fallback').classList.remove('hidden');
@@ -345,15 +346,27 @@
     </div>`;
   }
 
+  // Popup y tooltip se crean la primera vez que se necesitan (con ~15 mil pines, crearlos todos al cargar es lo más lento)
+  function bindLazy(m) {
+    if (m.getPopup()) return;
+    const s = m._store;
+    m.bindPopup(() => popupHTML(s), { maxWidth: 310 });
+    m.bindTooltip(esc(s.nombre), { direction: 'top', className: 'pin-tip' });
+  }
+
   function buildMarkers() {
     cluster.clearLayers();
     state.markers.clear();
+    const icons = { ok: pin('ok'), none: pin('none') };
     state.stores.forEach((s) => {
       if (!s.latlng) return;
-      const m = L.marker(s.latlng, { icon: pin(s.telefono ? 'ok' : 'none'), title: s.nombre, riseOnHover: true });
-      m.bindPopup(() => popupHTML(s), { maxWidth: 310 });
-      m.bindTooltip(esc(s.nombre), { direction: 'top', className: 'pin-tip' });
-      m.on('click', () => highlight(s.id, false));
+      const m = L.marker(s.latlng, { icon: s.telefono ? icons.ok : icons.none, title: s.nombre, riseOnHover: true });
+      m._store = s;
+      m.once('mouseover', () => { bindLazy(m); m.openTooltip(); });
+      m.on('click', () => {
+        highlight(s.id, false);
+        if (!m.getPopup()) { bindLazy(m); m.openPopup(); } // táctil: aún no hubo "mouseover"
+      });
       state.markers.set(s.id, m);
     });
   }
@@ -373,7 +386,7 @@
       if (state.letter && s.letter !== state.letter) return false;
       if (state.aiIds && !state.aiIds.has(s.id)) return false;
       if (state.near && state.me) { const d = distKm(s); if (d == null || d > radius) return false; }
-      if (q && !GEO.norm(`${s.nombre} ${s.municipio} ${s.estado} ${s.telefono || ''} ${digits(s.telefono)}`).includes(q)) return false;
+      if (q && !(s.hay ||= GEO.norm(`${s.nombre} ${s.municipio} ${s.estado} ${s.telefono || ''} ${digits(s.telefono)}`)).includes(q)) return false;
       return true;
     });
 
@@ -458,11 +471,16 @@
       </button></li>`).join('');
   }
 
-  function renderList() {
-    $('list').innerHTML = state.filtered.length
-      ? state.filtered.map((s) => {
-        const d = distKm(s);
-        return `
+  // La lista se dibuja por tandas: miles de tarjetas a la vez congelan la página
+  const PAGE = 60;
+  let listShown = 0;
+  const listObserver = new IntersectionObserver((es) => {
+    if (es.some((e) => e.isIntersecting)) renderMore();
+  }, { rootMargin: '600px' });
+
+  const cardHTML = (s) => {
+    const d = distKm(s);
+    return `
         <li class="card" data-id="${s.id}" tabindex="0">
           <div class="card-head">
             <span class="dot ${s.telefono ? 'ok' : 'none'}"></span>
@@ -472,17 +490,45 @@
           ${contactHTML(s)}
           ${actionsHTML(s)}
         </li>`;
-      }).join('')
-      : '<li class="empty">Sin resultados 🤷<br><button class="btn sm" data-clear="all">Limpiar filtros</button></li>';
+  };
+
+  function renderMore(upTo) {
+    const more = $('listMore');
+    if (!more) return;
+    const total = state.filtered.length;
+    const next = Math.min(total, upTo ?? listShown + PAGE);
+    if (next > listShown) {
+      more.insertAdjacentHTML('beforebegin', state.filtered.slice(listShown, next).map(cardHTML).join(''));
+      listShown = next;
+    }
+    if (listShown >= total) { listObserver.unobserve(more); more.remove(); return; }
+    more.textContent = `Mostrando ${listShown.toLocaleString('es-MX')} de ${total.toLocaleString('es-MX')} · sigue bajando para ver más`;
+    listObserver.unobserve(more); listObserver.observe(more); // si sigue a la vista, pide otra tanda
+  }
+
+  function renderList() {
+    const list = $('list');
+    listObserver.disconnect();
+    listShown = 0;
+    if (!state.filtered.length) {
+      list.innerHTML = '<li class="empty">Sin resultados 🤷<br><button class="btn sm" data-clear="all">Limpiar filtros</button></li>';
+      return;
+    }
+    list.innerHTML = '<li class="more" id="listMore"></li>';
+    renderMore();
   }
 
   function highlight(id, fly) {
     document.querySelectorAll('.card.active').forEach((c) => c.classList.remove('active'));
-    const card = document.querySelector(`.card[data-id="${id}"]`);
+    let card = document.querySelector(`.card[data-id="${id}"]`);
+    if (!card) { // la tarjeta aún no se ha dibujado: se dibuja hasta ella
+      const i = state.filtered.findIndex((s) => s.id === id);
+      if (i >= listShown) { renderMore(i + 1); card = document.querySelector(`.card[data-id="${id}"]`); }
+    }
     if (card) { card.classList.add('active'); if (!fly) card.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }
     if (fly) {
       const m = state.markers.get(id);
-      if (m) cluster.zoomToShowLayer(m, () => m.openPopup());
+      if (m) cluster.zoomToShowLayer(m, () => { bindLazy(m); m.openPopup(); });
       $('sidebar').classList.remove('open');
     }
   }
@@ -564,7 +610,7 @@
     const card = e.target.closest('.card');
     if (!card) return;
     const m = state.markers.get(+card.dataset.id);
-    if (m && cluster.getVisibleParent(m) === m) m.openTooltip();
+    if (m && cluster.getVisibleParent(m) === m) { bindLazy(m); m.openTooltip(); }
   });
   $('list').addEventListener('mouseout', (e) => {
     const card = e.target.closest('.card');
