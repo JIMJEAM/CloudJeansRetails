@@ -6,3 +6,8 @@ node_modules/
 Thumbs.db
 .vscode/
 .omc/
+
+# El formulario se descarga desde Drive, no se sube al repo
+Formulario de prospeccion.*
+*.zip
+*.rar
