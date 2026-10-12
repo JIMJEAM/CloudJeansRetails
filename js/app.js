@@ -147,6 +147,14 @@
   };
   const digits = (p) => (p || '').replace(/\D/g, '');
 
+  // Coordenadas exactas del enlace de Google Maps (?query=lat,lng o !3dlat!4dlng)
+  function exactLatLng(url) {
+    const m = /[?&]query=(-?\d{1,3}\.\d+),(-?\d{1,3}\.\d+)/.exec(url || '') || /!3d(-?\d{1,3}\.\d+)!4d(-?\d{1,3}\.\d+)/.exec(url || '');
+    if (!m) return null;
+    const lat = +m[1], lng = +m[2];
+    return lat > 14 && lat < 33 && lng > -119 && lng < -86 ? [lat, lng] : null;
+  }
+
   function normalizeRows(rows) {
     const phoneCount = {};
     const keyNorm = new Map();
@@ -169,9 +177,22 @@
       let wa = digits(whatsapp || telefono);
       if (wa.length === 10) wa = '52' + wa; // número nacional sin lada de país
       s.waDigits = wa.length >= 11 ? wa : null;
-      s.latlng = GEO.locate(s.municipio, s.nombre, s.estado);
+      s.latlng = exactLatLng(s.fuente);
       if (telefono) phoneCount[digits(telefono)] = (phoneCount[digits(telefono)] || 0) + 1;
       return s;
+    });
+    // Sin coordenadas propias: promedio de las tiendas del mismo municipio y estado; si no hay, tabla de municipios
+    const acc = {};
+    stores.forEach((s) => {
+      if (!s.latlng) return;
+      const k = `${s.estado}|${GEO.norm(s.municipio)}`;
+      const a = (acc[k] ||= [0, 0, 0]);
+      a[0] += s.latlng[0]; a[1] += s.latlng[1]; a[2]++;
+    });
+    stores.forEach((s) => {
+      if (s.latlng) return;
+      const a = acc[`${s.estado}|${GEO.norm(s.municipio)}`];
+      s.latlng = a ? [a[0] / a[2], a[1] / a[2]] : GEO.locate(s.municipio, s.nombre, s.estado);
     });
     stores.forEach((s) => {
       const d = digits(s.telefono);
@@ -218,6 +239,17 @@
       m.total++; if (s.telefono) m.phone++;
     });
     return Object.values(by).sort((a, b) => a.name.localeCompare(b.name, 'es'));
+  }
+
+  // Estado según el nombre del archivo cargado a mano (tiendas_ropa_<estado>_final.csv)
+  function estadoDeArchivo(name) {
+    const n = GEO.norm(name).replace(/[^a-z0-9]+/g, '');
+    const hit = SOURCES.map((s) => ({ e: s.estado, k: GEO.norm(s.estado).replace(/[^a-z0-9]+/g, '') }))
+      .filter((x) => n.includes(x.k)).sort((a, b) => b.k.length - a.k.length)[0];
+    if (hit) return hit.e;
+    if (/cdmx/.test(n)) return 'Ciudad de México';
+    if (/bajacaliforniante|bajacalifornianorte/.test(n)) return 'Baja California';
+    return 'Jalisco';
   }
 
   function parseCSV(text, estado) {
@@ -314,7 +346,7 @@
 
   $('csvFile').addEventListener('change', (e) => {
     const f = e.target.files[0];
-    if (f) f.text().then((t) => load(parseCSV(t, /guanajuato/i.test(f.name) ? 'Guanajuato' : /nuevo.?leon/i.test(f.name) ? 'Nuevo León' : /coahuila/i.test(f.name) ? 'Coahuila' : /sonora/i.test(f.name) ? 'Sonora' : /sinaloa/i.test(f.name) ? 'Sinaloa' : /nayarit/i.test(f.name) ? 'Nayarit' : /durango/i.test(f.name) ? 'Durango' : /chihuahua/i.test(f.name) ? 'Chihuahua' : /san.?luis/i.test(f.name) ? 'San Luis Potosí' : /aguascalientes/i.test(f.name) ? 'Aguascalientes' : /michoacan/i.test(f.name) ? 'Michoacán' : /baja.?california.?sur/i.test(f.name) ? 'Baja California Sur' : /baja.?california/i.test(f.name) ? 'Baja California' : /queretaro/i.test(f.name) ? 'Querétaro' : /hidalgo/i.test(f.name) ? 'Hidalgo' : /estado.?de.?mexico/i.test(f.name) ? 'Estado de México' : /cdmx|ciudad.?de.?mexico/i.test(f.name) ? 'Ciudad de México' : /puebla/i.test(f.name) ? 'Puebla' : 'Jalisco')));
+    if (f) f.text().then((t) => load(parseCSV(t, estadoDeArchivo(f.name))));
   });
 
   // ---------- Distancia ----------
