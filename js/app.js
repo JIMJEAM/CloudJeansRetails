@@ -16,9 +16,22 @@
     { estado: 'Baja California', url: 'data/tiendas_ropa_baja_california_norte_final.csv' },
     { estado: 'Querétaro', url: 'data/tiendas_ropa_Queretaro_final.csv' },
     { estado: 'Hidalgo', url: 'data/tiendas_ropa_hidalgo_final.csv' },
-    { estado: 'Estado de México', url: 'data/clientes_jeans_Estado_de_Mexico.csv' },
+    { estado: 'Estado de México', url: 'data/tiendas_ropa_estado_de_mexico_final.csv' },
     { estado: 'Ciudad de México', url: 'data/tiendas_ropa_CDMX_final.csv' },
     { estado: 'Puebla', url: 'data/tiendas_ropa_puebla_final.csv' },
+    { estado: 'Chiapas', url: 'data/tiendas_ropa_chiapas_final.csv' },
+    { estado: 'Colima', url: 'data/tiendas_ropa_colima_final.csv' },
+    { estado: 'Guerrero', url: 'data/tiendas_ropa_guerrero_final.csv' },
+    { estado: 'Morelos', url: 'data/tiendas_ropa_morelos_final.csv' },
+    { estado: 'Oaxaca', url: 'data/tiendas_ropa_oaxaca_final.csv' },
+    { estado: 'Quintana Roo', url: 'data/tiendas_ropa_quintana_roo_final.csv' },
+    { estado: 'Tabasco', url: 'data/tiendas_ropa_tabasco_final.csv' },
+    { estado: 'Tamaulipas', url: 'data/tiendas_ropa_tamaulipas_final.csv' },
+    { estado: 'Veracruz', url: 'data/tiendas_ropa_veracruz_final.csv' },
+    { estado: 'Yucatán', url: 'data/tiendas_ropa_yucatan_final.csv' },
+    { estado: 'Zacatecas', url: 'data/tiendas_ropa_zacatecas_final.csv' },
+    { estado: 'Campeche', url: 'data/tiendas_ropa_campeche_final.csv' },
+    { estado: 'Tlaxcala', url: 'data/tiendas_ropa_tlaxcala_final.csv' },
   ];
   const $ = (id) => document.getElementById(id);
   const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
